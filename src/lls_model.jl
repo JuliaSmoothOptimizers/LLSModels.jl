@@ -134,12 +134,12 @@ function NLPModels.jtprod_residual!(nls :: LLSModel, x :: AbstractVector, v :: A
   return Jtv
 end
 
-function NLPModels.hess_residual(nls :: LLSModel, x :: AbstractVector, v :: AbstractVector)
+function NLPModels.hess_residual(nls :: LLSModel, x :: AbstractVector{T}, v :: AbstractVector) where T
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_hess_residual)
   n = nls.meta.nvar
-  return spzeros(n, n)
+  return spzeros(T, n, n)
 end
 
 function NLPModels.hess_structure_residual!(nls :: LLSModel, rows :: AbstractVector{<: Integer}, cols :: AbstractVector{<: Integer})
@@ -156,11 +156,11 @@ function NLPModels.hess_coord_residual!(nls :: LLSModel, x :: AbstractVector, v 
   return vals
 end
 
-function NLPModels.jth_hess_residual(nls :: LLSModel, x :: AbstractVector, i :: Int)
+function NLPModels.jth_hess_residual(nls :: LLSModel, x :: AbstractVector{T}, i :: Int) where T
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jhess_residual)
   n = nls.meta.nvar
-  return spzeros(n, n)
+  return spzeros(T, n, n)
 end
 
 function NLPModels.hprod_residual!(nls :: LLSModel, x :: AbstractVector, i :: Int, v :: AbstractVector, Hiv :: AbstractVector)
