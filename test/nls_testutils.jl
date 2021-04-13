@@ -9,7 +9,10 @@
   end
   @testset "Check dimensions" begin
     check_nls_dimensions(lls)
-    check_nlp_dimensions(lls, exclude=[hess, hess_coord])
+    check_nlp_dimensions(lls, exclude = [hess, hess_coord])
+  end
+  @testset "Multiple precision support" begin
+    multiple_precision_nls(lls)
   end
   @testset "Check view subarray" begin
     view_subarray_nls(lls)
