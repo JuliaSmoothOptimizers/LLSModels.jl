@@ -8,67 +8,84 @@ Creates a Linear Least Squares model ``\\tfrac{1}{2}\\|Ax - b\\|^2`` with option
 This problem is a nonlinear least-squares problem with residual given by ``F(x) = Ax - b``.
 """
 mutable struct LLSModel <: AbstractNLSModel
-  meta :: NLPModelMeta
-  nls_meta :: NLSMeta
-  counters :: NLSCounters
+  meta::NLPModelMeta
+  nls_meta::NLSMeta
+  counters::NLSCounters
 
-  Arows :: Vector{Int}
-  Acols :: Vector{Int}
-  Avals :: Vector
-  b :: AbstractVector
-  Crows :: Vector{Int}
-  Ccols :: Vector{Int}
-  Cvals :: Vector
+  Arows::Vector{Int}
+  Acols::Vector{Int}
+  Avals::Vector
+  b::AbstractVector
+  Crows::Vector{Int}
+  Ccols::Vector{Int}
+  Cvals::Vector
 end
 
-NLPModels.show_header(io :: IO, nls :: LLSModel) = println(io, "LLSModel - Linear least-squares model")
+NLPModels.show_header(io::IO, nls::LLSModel) = println(io, "LLSModel - Linear least-squares model")
 
-function LLSModel(A :: AbstractMatrix, b :: AbstractVector;
-                  x0 :: AbstractVector = zeros(size(A,2)),
-                  lvar :: AbstractVector = fill(-Inf, size(A, 2)),
-                  uvar :: AbstractVector = fill(Inf, size(A, 2)),
-                  C :: AbstractMatrix  = Matrix{Float64}(undef, 0, 0),
-                  lcon :: AbstractVector = Float64[],
-                  ucon :: AbstractVector = Float64[],
-                  y0 :: AbstractVector = zeros(size(C,1)),
-                  name :: String = "generic-LLSModel"
-                 )
+function LLSModel(
+  A::AbstractMatrix,
+  b::AbstractVector;
+  x0::AbstractVector = zeros(size(A, 2)),
+  lvar::AbstractVector = fill(-Inf, size(A, 2)),
+  uvar::AbstractVector = fill(Inf, size(A, 2)),
+  C::AbstractMatrix = Matrix{Float64}(undef, 0, 0),
+  lcon::AbstractVector = Float64[],
+  ucon::AbstractVector = Float64[],
+  y0::AbstractVector = zeros(size(C, 1)),
+  name::String = "generic-LLSModel",
+)
   nvar = size(A, 2)
   Arows, Acols, Avals = if A isa AbstractSparseMatrix
     findnz(A)
   else
     m, n = size(A)
-    I = ((i,j) for i = 1:m, j = 1:n)
+    I = ((i, j) for i = 1:m, j = 1:n)
     getindex.(I, 1)[:], getindex.(I, 2)[:], A[:]
   end
   Crows, Ccols, Cvals = if C isa AbstractSparseMatrix
     findnz(C)
   else
     m, n = size(C)
-    I = ((i,j) for i = 1:m, j = 1:n)
+    I = ((i, j) for i = 1:m, j = 1:n)
     getindex.(I, 1)[:], getindex.(I, 2)[:], C[:]
   end
-  LLSModel(Arows, Acols, Avals, nvar, b, x0=x0, lvar=lvar, uvar=uvar,
-           Crows=Crows, Ccols=Ccols, Cvals=Cvals, lcon=lcon, ucon=ucon, y0=y0, name=name)
+  LLSModel(
+    Arows,
+    Acols,
+    Avals,
+    nvar,
+    b,
+    x0 = x0,
+    lvar = lvar,
+    uvar = uvar,
+    Crows = Crows,
+    Ccols = Ccols,
+    Cvals = Cvals,
+    lcon = lcon,
+    ucon = ucon,
+    y0 = y0,
+    name = name,
+  )
 end
 
-function LLSModel(Arows :: AbstractVector{<: Integer},
-                  Acols :: AbstractVector{<: Integer},
-                  Avals :: AbstractVector,
-                  nvar :: Integer,
-                  b :: AbstractVector;
-                  x0 :: AbstractVector = zeros(nvar),
-                  lvar :: AbstractVector = fill(-Inf, nvar),
-                  uvar :: AbstractVector = fill(Inf, nvar),
-                  Crows :: AbstractVector{<: Integer} = Int[],
-                  Ccols :: AbstractVector{<: Integer} = Int[],
-                  Cvals :: AbstractVector = Float64[],
-                  lcon :: AbstractVector = Float64[],
-                  ucon :: AbstractVector = Float64[],
-                  y0 :: AbstractVector = zeros(length(lcon)),
-                  name :: String = "generic-LLSModel"
-                 )
-
+function LLSModel(
+  Arows::AbstractVector{<:Integer},
+  Acols::AbstractVector{<:Integer},
+  Avals::AbstractVector,
+  nvar::Integer,
+  b::AbstractVector;
+  x0::AbstractVector = zeros(nvar),
+  lvar::AbstractVector = fill(-Inf, nvar),
+  uvar::AbstractVector = fill(Inf, nvar),
+  Crows::AbstractVector{<:Integer} = Int[],
+  Ccols::AbstractVector{<:Integer} = Int[],
+  Cvals::AbstractVector = Float64[],
+  lcon::AbstractVector = Float64[],
+  ucon::AbstractVector = Float64[],
+  y0::AbstractVector = zeros(length(lcon)),
+  name::String = "generic-LLSModel",
+)
   nequ = length(b)
   ncon = length(lcon)
   if !(ncon == length(ucon) == length(y0))
@@ -83,15 +100,28 @@ function LLSModel(Arows :: AbstractVector{<: Integer},
     error("The length of Crows, Ccols and Cvals must be the same")
   end
 
-  meta = NLPModelMeta(nvar, x0=x0, lvar=lvar, uvar=uvar, ncon=ncon, y0=y0, lin=1:ncon,
-                      nln=Int[], lcon=lcon, ucon=ucon, nnzj=nnzj, nnzh=0, name=name)
+  meta = NLPModelMeta(
+    nvar,
+    x0 = x0,
+    lvar = lvar,
+    uvar = uvar,
+    ncon = ncon,
+    y0 = y0,
+    lin = 1:ncon,
+    nln = Int[],
+    lcon = lcon,
+    ucon = ucon,
+    nnzj = nnzj,
+    nnzh = 0,
+    name = name,
+  )
 
-  nls_meta = NLSMeta(nequ, nvar, nnzj=nnzjF, nnzh=0, lin=1:nequ, nln=Int[])
+  nls_meta = NLSMeta(nequ, nvar, nnzj = nnzjF, nnzh = 0, lin = 1:nequ, nln = Int[])
 
   return LLSModel(meta, nls_meta, NLSCounters(), Arows, Acols, Avals, b, Crows, Ccols, Cvals)
 end
 
-function NLPModels.residual!(nls :: LLSModel, x :: AbstractVector, Fx :: AbstractVector)
+function NLPModels.residual!(nls::LLSModel, x::AbstractVector, Fx::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ Fx
   increment!(nls, :neval_residual)
@@ -100,7 +130,11 @@ function NLPModels.residual!(nls :: LLSModel, x :: AbstractVector, Fx :: Abstrac
   return Fx
 end
 
-function NLPModels.jac_structure_residual!(nls :: LLSModel, rows :: AbstractVector{<: Integer}, cols :: AbstractVector{<: Integer})
+function NLPModels.jac_structure_residual!(
+  nls::LLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
   @lencheck nls.nls_meta.nnzj rows
   @lencheck nls.nls_meta.nnzj cols
   rows .= nls.Arows
@@ -108,7 +142,7 @@ function NLPModels.jac_structure_residual!(nls :: LLSModel, rows :: AbstractVect
   return rows, cols
 end
 
-function NLPModels.jac_coord_residual!(nls :: LLSModel, x :: AbstractVector, vals :: AbstractVector)
+function NLPModels.jac_coord_residual!(nls::LLSModel, x::AbstractVector, vals::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nnzj vals
   increment!(nls, :neval_jac_residual)
@@ -116,7 +150,12 @@ function NLPModels.jac_coord_residual!(nls :: LLSModel, x :: AbstractVector, val
   return vals
 end
 
-function NLPModels.jprod_residual!(nls :: LLSModel, x :: AbstractVector, v :: AbstractVector, Jv :: AbstractVector)
+function NLPModels.jprod_residual!(
+  nls::LLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  Jv::AbstractVector,
+)
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.nvar v
   @lencheck nls.nls_meta.nequ Jv
@@ -125,7 +164,12 @@ function NLPModels.jprod_residual!(nls :: LLSModel, x :: AbstractVector, v :: Ab
   return Jv
 end
 
-function NLPModels.jtprod_residual!(nls :: LLSModel, x :: AbstractVector, v :: AbstractVector, Jtv :: AbstractVector)
+function NLPModels.jtprod_residual!(
+  nls::LLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  Jtv::AbstractVector,
+)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ v
   @lencheck nls.meta.nvar Jtv
@@ -134,7 +178,7 @@ function NLPModels.jtprod_residual!(nls :: LLSModel, x :: AbstractVector, v :: A
   return Jtv
 end
 
-function NLPModels.hess_residual(nls :: LLSModel, x :: AbstractVector{T}, v :: AbstractVector) where T
+function NLPModels.hess_residual(nls::LLSModel, x::AbstractVector{T}, v::AbstractVector) where {T}
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_hess_residual)
@@ -142,13 +186,22 @@ function NLPModels.hess_residual(nls :: LLSModel, x :: AbstractVector{T}, v :: A
   return spzeros(T, n, n)
 end
 
-function NLPModels.hess_structure_residual!(nls :: LLSModel, rows :: AbstractVector{<: Integer}, cols :: AbstractVector{<: Integer})
+function NLPModels.hess_structure_residual!(
+  nls::LLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
   @lencheck 0 rows
   @lencheck 0 cols
   return rows, cols
 end
 
-function NLPModels.hess_coord_residual!(nls :: LLSModel, x :: AbstractVector, v :: AbstractVector, vals :: AbstractVector)
+function NLPModels.hess_coord_residual!(
+  nls::LLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  vals::AbstractVector,
+)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ v
   @lencheck 0 vals
@@ -156,21 +209,27 @@ function NLPModels.hess_coord_residual!(nls :: LLSModel, x :: AbstractVector, v 
   return vals
 end
 
-function NLPModels.jth_hess_residual(nls :: LLSModel, x :: AbstractVector{T}, i :: Int) where T
+function NLPModels.jth_hess_residual(nls::LLSModel, x::AbstractVector{T}, i::Int) where {T}
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jhess_residual)
   n = nls.meta.nvar
   return spzeros(T, n, n)
 end
 
-function NLPModels.hprod_residual!(nls :: LLSModel, x :: AbstractVector, i :: Int, v :: AbstractVector, Hiv :: AbstractVector)
+function NLPModels.hprod_residual!(
+  nls::LLSModel,
+  x::AbstractVector,
+  i::Int,
+  v::AbstractVector,
+  Hiv::AbstractVector,
+)
   @lencheck nls.meta.nvar x v Hiv
   increment!(nls, :neval_hprod_residual)
   fill!(Hiv, zero(eltype(x)))
   return Hiv
 end
 
-function NLPModels.cons!(nls :: LLSModel, x :: AbstractVector, c :: AbstractVector)
+function NLPModels.cons!(nls::LLSModel, x::AbstractVector, c::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.ncon c
   increment!(nls, :neval_cons)
@@ -178,14 +237,18 @@ function NLPModels.cons!(nls :: LLSModel, x :: AbstractVector, c :: AbstractVect
   return c
 end
 
-function NLPModels.jac_structure!(nls :: LLSModel, rows :: AbstractVector{<: Integer}, cols :: AbstractVector{<: Integer})
+function NLPModels.jac_structure!(
+  nls::LLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
   @lencheck nls.meta.nnzj rows cols
   rows .= nls.Crows
   cols .= nls.Ccols
   return rows, cols
 end
 
-function NLPModels.jac_coord!(nls :: LLSModel, x :: AbstractVector, vals :: AbstractVector)
+function NLPModels.jac_coord!(nls::LLSModel, x::AbstractVector, vals::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.nnzj vals
   increment!(nls, :neval_jac)
@@ -193,7 +256,7 @@ function NLPModels.jac_coord!(nls :: LLSModel, x :: AbstractVector, vals :: Abst
   return vals
 end
 
-function NLPModels.jprod!(nls :: LLSModel, x :: AbstractVector, v :: AbstractVector, Jv :: AbstractVector)
+function NLPModels.jprod!(nls::LLSModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.ncon Jv
   increment!(nls, :neval_jprod)
@@ -201,7 +264,7 @@ function NLPModels.jprod!(nls :: LLSModel, x :: AbstractVector, v :: AbstractVec
   return Jv
 end
 
-function NLPModels.jtprod!(nls :: LLSModel, x :: AbstractVector, v :: AbstractVector, Jtv :: AbstractVector)
+function NLPModels.jtprod!(nls::LLSModel, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector)
   @lencheck nls.meta.nvar x Jtv
   @lencheck nls.meta.ncon v
   increment!(nls, :neval_jtprod)
@@ -209,7 +272,13 @@ function NLPModels.jtprod!(nls :: LLSModel, x :: AbstractVector, v :: AbstractVe
   return Jtv
 end
 
-function NLPModels.hprod!(nls :: LLSModel, x :: AbstractVector, v :: AbstractVector, Hv :: AbstractVector; obj_weight = 1.0)
+function NLPModels.hprod!(
+  nls::LLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  Hv::AbstractVector;
+  obj_weight = 1.0,
+)
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
   Av = zeros(nls.nls_meta.nequ)
@@ -219,13 +288,26 @@ function NLPModels.hprod!(nls :: LLSModel, x :: AbstractVector, v :: AbstractVec
   return Hv
 end
 
-function NLPModels.hprod!(nls :: LLSModel, x :: AbstractVector, y :: AbstractVector, v :: AbstractVector, Hv :: AbstractVector; obj_weight = 1.0)
+function NLPModels.hprod!(
+  nls::LLSModel,
+  x::AbstractVector,
+  y::AbstractVector,
+  v::AbstractVector,
+  Hv::AbstractVector;
+  obj_weight = 1.0,
+)
   @lencheck nls.meta.nvar x v Hv
   @lencheck nls.meta.ncon y
-  hprod!(nls, x, v, Hv, obj_weight=obj_weight)
+  hprod!(nls, x, v, Hv, obj_weight = obj_weight)
 end
 
-function NLPModels.ghjvprod!(nls :: LLSModel, x :: AbstractVector{T}, g :: AbstractVector{T}, v :: AbstractVector{T}, gHv :: AbstractVector{T}) where T
+function NLPModels.ghjvprod!(
+  nls::LLSModel,
+  x::AbstractVector{T},
+  g::AbstractVector{T},
+  v::AbstractVector{T},
+  gHv::AbstractVector{T},
+) where {T}
   @lencheck nls.meta.nvar x g v
   @lencheck nls.meta.ncon gHv
   increment!(nls, :neval_hprod)
