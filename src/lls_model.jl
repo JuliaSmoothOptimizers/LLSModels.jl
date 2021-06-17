@@ -7,34 +7,34 @@ Creates a Linear Least Squares model ``\\tfrac{1}{2}\\|Ax - b\\|^2`` with option
 `lvar ≦ x ≦ uvar` and optional linear constraints `lcon ≦ Cx ≦ ucon`.
 This problem is a nonlinear least-squares problem with residual given by ``F(x) = Ax - b``.
 """
-mutable struct LLSModel <: AbstractNLSModel
-  meta::NLPModelMeta
-  nls_meta::NLSMeta
+mutable struct LLSModel{T, S} <: AbstractNLSModel{T, S}
+  meta::NLPModelMeta{T, S}
+  nls_meta::NLSMeta{T, S}
   counters::NLSCounters
 
   Arows::Vector{Int}
   Acols::Vector{Int}
-  Avals::Vector
-  b::AbstractVector
+  Avals::S
+  b::S
   Crows::Vector{Int}
   Ccols::Vector{Int}
-  Cvals::Vector
+  Cvals::S
 end
 
 NLPModels.show_header(io::IO, nls::LLSModel) = println(io, "LLSModel - Linear least-squares model")
 
 function LLSModel(
   A::AbstractMatrix,
-  b::AbstractVector;
-  x0::AbstractVector = zeros(size(A, 2)),
-  lvar::AbstractVector = fill(-Inf, size(A, 2)),
-  uvar::AbstractVector = fill(Inf, size(A, 2)),
-  C::AbstractMatrix = Matrix{Float64}(undef, 0, 0),
-  lcon::AbstractVector = Float64[],
-  ucon::AbstractVector = Float64[],
-  y0::AbstractVector = zeros(size(C, 1)),
+  b::S;
+  x0::S = fill!(S(undef, size(A, 2)), zero(eltype(b))),
+  lvar::S = fill!(S(undef, size(A, 2)), eltype(b)(-Inf)),
+  uvar::S = fill!(S(undef, size(A, 2)), eltype(b)(Inf)),
+  C::AbstractMatrix = similar(b, 0, 0),
+  lcon::S = S(undef, 0),
+  ucon::S = S(undef, 0),
+  y0::S = fill!(S(undef, size(C, 1)), zero(eltype(b))),
   name::String = "generic-LLSModel",
-)
+) where {S}
   nvar = size(A, 2)
   Arows, Acols, Avals = if A isa AbstractSparseMatrix
     findnz(A)
@@ -72,20 +72,20 @@ end
 function LLSModel(
   Arows::AbstractVector{<:Integer},
   Acols::AbstractVector{<:Integer},
-  Avals::AbstractVector,
+  Avals::S,
   nvar::Integer,
-  b::AbstractVector;
-  x0::AbstractVector = zeros(nvar),
-  lvar::AbstractVector = fill(-Inf, nvar),
-  uvar::AbstractVector = fill(Inf, nvar),
+  b::S;
+  x0::S = fill!(S(undef, nvar), zero(eltype(b))),
+  lvar::S = fill!(S(undef, nvar), eltype(b)(-Inf)),
+  uvar::S = fill!(S(undef, nvar), eltype(b)(Inf)),
   Crows::AbstractVector{<:Integer} = Int[],
   Ccols::AbstractVector{<:Integer} = Int[],
-  Cvals::AbstractVector = Float64[],
-  lcon::AbstractVector = Float64[],
-  ucon::AbstractVector = Float64[],
-  y0::AbstractVector = zeros(length(lcon)),
+  Cvals::S = S(undef, 0),
+  lcon::S = S(undef, 0),
+  ucon::S = S(undef, 0),
+  y0::S = fill!(S(undef, length(lcon)), zero(eltype(b))),
   name::String = "generic-LLSModel",
-)
+) where {S}
   nequ = length(b)
   ncon = length(lcon)
   if !(ncon == length(ucon) == length(y0))
@@ -273,15 +273,15 @@ function NLPModels.jtprod!(nls::LLSModel, x::AbstractVector, v::AbstractVector, 
 end
 
 function NLPModels.hprod!(
-  nls::LLSModel,
+  nls::LLSModel{T, S},
   x::AbstractVector,
   v::AbstractVector,
   Hv::AbstractVector;
   obj_weight = 1.0,
-)
+) where {T, S}
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
-  Av = zeros(nls.nls_meta.nequ)
+  Av = fill!(S(undef, nls.nls_meta.nequ), zero(T))
   coo_prod!(nls.Arows, nls.Acols, nls.Avals, v, Av)
   coo_prod!(nls.Acols, nls.Arows, nls.Avals, Av, Hv)
   Hv .*= obj_weight
@@ -311,6 +311,6 @@ function NLPModels.ghjvprod!(
   @lencheck nls.meta.nvar x g v
   @lencheck nls.meta.ncon gHv
   increment!(nls, :neval_hprod)
-  gHv .= zeros(T, nls.meta.ncon)
+  gHv .= zero(T)
   return gHv
 end
