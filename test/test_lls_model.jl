@@ -3,7 +3,7 @@ function lls_test()
     for A in [Matrix(1.0I, 10, 3) .+ 1, sparse(1.0I, 10, 3) .+ 1],
       C in [ones(1, 3), [ones(1, 3); -I], sparse(ones(1, 3))]
 
-      b = collect(1:10)
+      b = collect(1.0:10.0)
       nequ, nvar = size(A)
       ncon = size(C, 1)
       nls = LLSModel(A, b, C = C, lcon = zeros(ncon), ucon = zeros(ncon))
