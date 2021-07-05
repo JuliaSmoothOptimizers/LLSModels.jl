@@ -277,7 +277,7 @@ function NLPModels.hprod!(
   x::AbstractVector,
   v::AbstractVector,
   Hv::AbstractVector;
-  obj_weight = 1.0,
+  obj_weight = one(T),
 ) where {T, S}
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
@@ -294,7 +294,7 @@ function NLPModels.hprod!(
   y::AbstractVector,
   v::AbstractVector,
   Hv::AbstractVector;
-  obj_weight = 1.0,
+  obj_weight = one(eltype(x)),
 )
   @lencheck nls.meta.nvar x v Hv
   @lencheck nls.meta.ncon y
