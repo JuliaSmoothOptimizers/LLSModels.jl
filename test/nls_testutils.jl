@@ -20,7 +20,7 @@
     check_nlp_dimensions(lls, exclude = [hess, hess_coord, jth_hess, jth_hess_coord, jth_hprod])
   end
   @testset "Multiple precision support" begin
-    multiple_precision_nls(lls)
+    multiple_precision_nls("LLS")
   end
   @testset "Check view subarray" begin
     view_subarray_nls(lls)
