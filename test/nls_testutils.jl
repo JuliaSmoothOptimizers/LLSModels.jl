@@ -1,13 +1,14 @@
 @testset "Checking TestUtils tests on problem LLS" begin
-  lls = LLSModel(
-    [1.0 -1; 1 1; 0 1],
-    [0.0; 2; 2],
-    x0 = zeros(2),
-    C = [1.0 1],
-    lcon = [0.0],
-    ucon = [Inf],
+  lls_from_T(::Type{T} = Float64) where {T} = LLSModel(
+    T[1 -1; 1 1; 0 1],
+    T[0; 2; 2],
+    x0 = zeros(T, 2),
+    C = T[1 1],
+    lcon = T[0],
+    ucon = T[Inf],
     name = "lls_LLSModel",
   )
+  lls = lls_from_T()
   nls_man = LLS()
 
   show(IOBuffer(), lls)
@@ -20,7 +21,7 @@
     check_nlp_dimensions(lls, exclude = [hess, hess_coord, jth_hess, jth_hess_coord, jth_hprod])
   end
   @testset "Multiple precision support" begin
-    multiple_precision_nls("LLS")
+    multiple_precision_nls(lls_from_T)
   end
   @testset "Check view subarray" begin
     view_subarray_nls(lls)
