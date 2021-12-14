@@ -108,7 +108,6 @@ function LLSModel(
     ncon = ncon,
     y0 = y0,
     lin = 1:ncon,
-    nln = Int[],
     lcon = lcon,
     ucon = ucon,
     nnzj = nnzj,
@@ -116,7 +115,7 @@ function LLSModel(
     name = name,
   )
 
-  nls_meta = NLSMeta(nequ, nvar, x0 = x0, nnzj = nnzjF, nnzh = 0, lin = 1:nequ, nln = Int[])
+  nls_meta = NLSMeta(nequ, nvar, x0 = x0, nnzj = nnzjF, nnzh = 0, lin = 1:nequ)
 
   return LLSModel(meta, nls_meta, NLSCounters(), Arows, Acols, Avals, b, Crows, Ccols, Cvals)
 end
