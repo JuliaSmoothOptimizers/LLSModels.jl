@@ -1,6 +1,6 @@
 name = "LLSModels"
 uuid = "39f5bc3e-5160-4bf8-ac48-504fd2534d24"
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
