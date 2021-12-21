@@ -12,13 +12,9 @@ mutable struct LLSModel{T, S} <: AbstractNLSModel{T, S}
   nls_meta::NLSMeta{T, S}
   counters::NLSCounters
 
-  Arows::Vector{Int}
-  Acols::Vector{Int}
-  Avals::S
+  A::SparseMatrixCOO{T, Int}
   b::S
-  Crows::Vector{Int}
-  Ccols::Vector{Int}
-  Cvals::S
+  C::SparseMatrixCOO{T, Int}
 end
 
 NLPModels.show_header(io::IO, nls::LLSModel) = println(io, "LLSModel - Linear least-squares model")
@@ -29,44 +25,75 @@ function LLSModel(
   x0::S = fill!(S(undef, size(A, 2)), zero(eltype(b))),
   lvar::S = fill!(S(undef, size(A, 2)), eltype(b)(-Inf)),
   uvar::S = fill!(S(undef, size(A, 2)), eltype(b)(Inf)),
-  C::AbstractMatrix = similar(b, 0, 0),
   lcon::S = S(undef, 0),
   ucon::S = S(undef, 0),
+  C::AbstractMatrix = SparseMatrixCOO(length(lcon), length(lvar), Int[], Int[], similar(b, 0, 0)),
   y0::S = fill!(S(undef, size(C, 1)), zero(eltype(b))),
   name::String = "generic-LLSModel",
 ) where {S}
-  nvar = size(A, 2)
+  ncon, nvar = size(A)
+  m, n = size(C)
   Arows, Acols, Avals = if A isa AbstractSparseMatrix
     findnz(A)
   else
-    m, n = size(A)
-    I = ((i, j) for i = 1:m, j = 1:n)
+    I = ((i, j) for i = 1:ncon, j = 1:nvar)
     getindex.(I, 1)[:], getindex.(I, 2)[:], A[:]
   end
   Crows, Ccols, Cvals = if C isa AbstractSparseMatrix
     findnz(C)
   else
-    m, n = size(C)
     I = ((i, j) for i = 1:m, j = 1:n)
     getindex.(I, 1)[:], getindex.(I, 2)[:], C[:]
   end
   LLSModel(
-    Arows,
-    Acols,
-    Avals,
+    SparseMatrixCOO(ncon, nvar, Arows, Acols, Avals),
     nvar,
     b,
     x0 = x0,
     lvar = lvar,
     uvar = uvar,
-    Crows = Crows,
-    Ccols = Ccols,
-    Cvals = Cvals,
+    C = SparseMatrixCOO(m, n, Crows, Ccols, Cvals),
     lcon = lcon,
     ucon = ucon,
     y0 = y0,
     name = name,
   )
+end
+
+function LLSModel(
+  A::SparseMatrixCOO{T, <:Integer},
+  nvar::Integer,
+  b::S;
+  x0::S = fill!(S(undef, nvar), zero(eltype(b))),
+  lvar::S = fill!(S(undef, nvar), eltype(b)(-Inf)),
+  uvar::S = fill!(S(undef, nvar), eltype(b)(Inf)),
+  lcon::S = S(undef, 0),
+  ucon::S = S(undef, 0),
+  C::SparseMatrixCOO{T, <:Integer} = SparseMatrixCOO(length(lcon), nvar, Int[], Int[], S(undef, 0)),
+  y0::S = fill!(S(undef, length(lcon)), zero(eltype(b))),
+  name::String = "generic-LLSModel",
+) where {T, S}
+  nequ = length(b)
+  ncon = length(lcon)
+
+  meta = NLPModelMeta(
+    nvar,
+    x0 = x0,
+    lvar = lvar,
+    uvar = uvar,
+    ncon = ncon,
+    y0 = y0,
+    lin = 1:ncon,
+    lcon = lcon,
+    ucon = ucon,
+    nnzj = nnz(C),
+    nnzh = 0,
+    name = name,
+  )
+
+  nls_meta = NLSMeta(nequ, nvar, x0 = x0, nnzj = nnz(A), nnzh = 0, lin = 1:nequ)
+
+  return LLSModel(meta, nls_meta, NLSCounters(), A, b, C)
 end
 
 function LLSModel(
@@ -85,7 +112,8 @@ function LLSModel(
   ucon::S = S(undef, 0),
   y0::S = fill!(S(undef, length(lcon)), zero(eltype(b))),
   name::String = "generic-LLSModel",
-) where {S}
+) where {T, S}
+
   nequ = length(b)
   ncon = length(lcon)
   if !(ncon == length(ucon) == length(y0))
@@ -100,31 +128,26 @@ function LLSModel(
     error("The length of Crows, Ccols and Cvals must be the same")
   end
 
-  meta = NLPModelMeta(
+  return LLSModel(
+    SparseMatrixCOO(nequ, nvar, Arows, Acols, Avals),
     nvar,
+    b;
     x0 = x0,
     lvar = lvar,
     uvar = uvar,
-    ncon = ncon,
     y0 = y0,
-    lin = 1:ncon,
+    C = SparseMatrixCOO(ncon, nvar, Crows, Ccols, Cvals),
     lcon = lcon,
     ucon = ucon,
-    nnzj = nnzj,
-    nnzh = 0,
     name = name,
   )
-
-  nls_meta = NLSMeta(nequ, nvar, x0 = x0, nnzj = nnzjF, nnzh = 0, lin = 1:nequ)
-
-  return LLSModel(meta, nls_meta, NLSCounters(), Arows, Acols, Avals, b, Crows, Ccols, Cvals)
 end
 
 function NLPModels.residual!(nls::LLSModel, x::AbstractVector, Fx::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ Fx
   increment!(nls, :neval_residual)
-  coo_prod!(nls.Arows, nls.Acols, nls.Avals, x, Fx)
+  mul!(Fx, nls.A, x)
   Fx .-= nls.b
   return Fx
 end
@@ -136,8 +159,8 @@ function NLPModels.jac_structure_residual!(
 )
   @lencheck nls.nls_meta.nnzj rows
   @lencheck nls.nls_meta.nnzj cols
-  rows .= nls.Arows
-  cols .= nls.Acols
+  rows .= nls.A.rows
+  cols .= nls.A.cols
   return rows, cols
 end
 
@@ -145,7 +168,7 @@ function NLPModels.jac_coord_residual!(nls::LLSModel, x::AbstractVector, vals::A
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nnzj vals
   increment!(nls, :neval_jac_residual)
-  vals .= nls.Avals
+  vals .= nls.A.vals
   return vals
 end
 
@@ -159,7 +182,7 @@ function NLPModels.jprod_residual!(
   @lencheck nls.meta.nvar v
   @lencheck nls.nls_meta.nequ Jv
   increment!(nls, :neval_jprod_residual)
-  coo_prod!(nls.Arows, nls.Acols, nls.Avals, v, Jv)
+  mul!(Jv, nls.A, v)
   return Jv
 end
 
@@ -173,7 +196,7 @@ function NLPModels.jtprod_residual!(
   @lencheck nls.nls_meta.nequ v
   @lencheck nls.meta.nvar Jtv
   increment!(nls, :neval_jtprod_residual)
-  coo_prod!(nls.Acols, nls.Arows, nls.Avals, v, Jtv)
+  mul!(Jtv, transpose(nls.A), v)
   return Jtv
 end
 
@@ -232,7 +255,7 @@ function NLPModels.cons!(nls::LLSModel, x::AbstractVector, c::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.ncon c
   increment!(nls, :neval_cons)
-  coo_prod!(nls.Crows, nls.Ccols, nls.Cvals, x, c)
+  mul!(c, nls.C, x)
   return c
 end
 
@@ -242,8 +265,8 @@ function NLPModels.jac_structure!(
   cols::AbstractVector{<:Integer},
 )
   @lencheck nls.meta.nnzj rows cols
-  rows .= nls.Crows
-  cols .= nls.Ccols
+  rows .= nls.C.rows
+  cols .= nls.C.cols
   return rows, cols
 end
 
@@ -251,7 +274,7 @@ function NLPModels.jac_coord!(nls::LLSModel, x::AbstractVector, vals::AbstractVe
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.nnzj vals
   increment!(nls, :neval_jac)
-  vals .= nls.Cvals
+  vals .= nls.C.vals
   return vals
 end
 
@@ -259,7 +282,7 @@ function NLPModels.jprod!(nls::LLSModel, x::AbstractVector, v::AbstractVector, J
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.ncon Jv
   increment!(nls, :neval_jprod)
-  coo_prod!(nls.Crows, nls.Ccols, nls.Cvals, v, Jv)
+  mul!(Jv, nls.C, v)
   return Jv
 end
 
@@ -267,7 +290,7 @@ function NLPModels.jtprod!(nls::LLSModel, x::AbstractVector, v::AbstractVector, 
   @lencheck nls.meta.nvar x Jtv
   @lencheck nls.meta.ncon v
   increment!(nls, :neval_jtprod)
-  coo_prod!(nls.Ccols, nls.Crows, nls.Cvals, v, Jtv)
+  mul!(Jtv, transpose(nls.C), v)
   return Jtv
 end
 
@@ -281,8 +304,8 @@ function NLPModels.hprod!(
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
   Av = fill!(S(undef, nls.nls_meta.nequ), zero(T))
-  coo_prod!(nls.Arows, nls.Acols, nls.Avals, v, Av)
-  coo_prod!(nls.Acols, nls.Arows, nls.Avals, Av, Hv)
+  mul!(Av, nls.A, v)
+  mul!(Hv, transpose(nls.A), Av)
   Hv .*= obj_weight
   return Hv
 end
