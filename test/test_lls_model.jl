@@ -36,7 +36,18 @@ function lls_test()
     b = collect(1.0:10.0)
     nequ, nvar = size(A)
     ncon = size(C, 1)
-    nls = LLSModel(Arows, Acols, Avals, nvar, b, Crows = Crows, Ccols = Ccols, Cvals = Cvals, lcon = zeros(ncon), ucon = zeros(ncon))
+    nls = LLSModel(
+      Arows,
+      Acols,
+      Avals,
+      nvar,
+      b,
+      Crows = Crows,
+      Ccols = Ccols,
+      Cvals = Cvals,
+      lcon = zeros(ncon),
+      ucon = zeros(ncon),
+    )
     x = [1.0; -1.0; 1.0]
     @test isapprox(A * x - b, residual(nls, x), rtol = 1e-8)
     @test A == jac_residual(nls, x)
