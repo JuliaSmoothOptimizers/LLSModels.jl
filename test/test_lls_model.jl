@@ -71,9 +71,7 @@ function lls_test()
   end
 
   @testset "Test with LinearOperators" begin
-    for A in [LinearOperator(Matrix(1.0I, 10, 3) .+ 1)],
-      C in [LinearOperator(ones(1, 3))]
-
+    for A in [LinearOperator(Matrix(1.0I, 10, 3) .+ 1)], C in [LinearOperator(ones(1, 3))]
       b = collect(1.0:10.0)
       nequ, nvar = size(A)
       ncon = size(C, 1)

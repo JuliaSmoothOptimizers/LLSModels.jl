@@ -198,7 +198,11 @@ function NLPModels.jac_structure_residual!(
   return rows, cols
 end
 
-function NLPModels.jac_coord_residual!(nls::LLSModel{T, S, M1, M2}, x::AbstractVector, vals::AbstractVector) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
+function NLPModels.jac_coord_residual!(
+  nls::LLSModel{T, S, M1, M2},
+  x::AbstractVector,
+  vals::AbstractVector,
+) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nnzj vals
   increment!(nls, :neval_jac_residual)
@@ -206,7 +210,10 @@ function NLPModels.jac_coord_residual!(nls::LLSModel{T, S, M1, M2}, x::AbstractV
   return vals
 end
 
-function NLPModels.jac_residual(nls::LLSModel{T, S, M1, M2}, x::AbstractVector) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
+function NLPModels.jac_residual(
+  nls::LLSModel{T, S, M1, M2},
+  x::AbstractVector,
+) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jac_residual)
   return nls.A
@@ -248,7 +255,11 @@ function NLPModels.hess_residual(nls::LLSModel, x::AbstractVector{T}, v::Abstrac
   return spzeros(T, n, n)
 end
 
-function NLPModels.hess_residual(nls::LLSModel{T, S, M1, M2}, x::AbstractVector{T}, v::AbstractVector) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
+function NLPModels.hess_residual(
+  nls::LLSModel{T, S, M1, M2},
+  x::AbstractVector{T},
+  v::AbstractVector,
+) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_hess_residual)
@@ -286,7 +297,11 @@ function NLPModels.jth_hess_residual(nls::LLSModel, x::AbstractVector{T}, i::Int
   return spzeros(T, n, n)
 end
 
-function NLPModels.jth_hess_residual(nls::LLSModel{T, S, M1, M2}, x::AbstractVector{T}, i::Int) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
+function NLPModels.jth_hess_residual(
+  nls::LLSModel{T, S, M1, M2},
+  x::AbstractVector{T},
+  i::Int,
+) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jhess_residual)
   n = nls.meta.nvar
@@ -325,7 +340,11 @@ function NLPModels.jac_structure!(
   return rows, cols
 end
 
-function NLPModels.jac_coord!(nls::LLSModel{T, S, M1, M2}, x::AbstractVector, vals::AbstractVector) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
+function NLPModels.jac_coord!(
+  nls::LLSModel{T, S, M1, M2},
+  x::AbstractVector,
+  vals::AbstractVector,
+) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.nnzj vals
   increment!(nls, :neval_jac)
@@ -333,7 +352,10 @@ function NLPModels.jac_coord!(nls::LLSModel{T, S, M1, M2}, x::AbstractVector, va
   return vals
 end
 
-function NLPModels.jac(nls::LLSModel{T, S, M1, M2}, x::AbstractVector) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
+function NLPModels.jac(
+  nls::LLSModel{T, S, M1, M2},
+  x::AbstractVector,
+) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jac)
   return nls.C
