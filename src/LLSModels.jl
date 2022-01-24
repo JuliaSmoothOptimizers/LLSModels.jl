@@ -1,7 +1,7 @@
 module LLSModels
 
 using LinearAlgebra, SparseArrays
-using NLPModels, NLPModelsModifiers, SparseMatricesCOO
+using LinearOperators, NLPModels, NLPModelsModifiers, SparseMatricesCOO
 
 include("lls_model.jl")
 include("model-interaction.jl")

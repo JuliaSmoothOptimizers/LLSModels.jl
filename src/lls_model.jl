@@ -7,14 +7,14 @@ Creates a Linear Least Squares model ``\\tfrac{1}{2}\\|Ax - b\\|^2`` with option
 `lvar ≦ x ≦ uvar` and optional linear constraints `lcon ≦ Cx ≦ ucon`.
 This problem is a nonlinear least-squares problem with residual given by ``F(x) = Ax - b``.
 """
-mutable struct LLSModel{T, S} <: AbstractNLSModel{T, S}
+mutable struct LLSModel{T, S, M1, M2} <: AbstractNLSModel{T, S}
   meta::NLPModelMeta{T, S}
   nls_meta::NLSMeta{T, S}
   counters::NLSCounters
 
-  A::SparseMatrixCOO{T, Int}
+  A::M1
   b::S
-  C::SparseMatrixCOO{T, Int}
+  C::M2
 end
 
 NLPModels.show_header(io::IO, nls::LLSModel) = println(io, "LLSModel - Linear least-squares model")
@@ -142,6 +142,41 @@ function LLSModel(
   )
 end
 
+function LLSModel(
+  A::AbstractLinearOperator{T},
+  b::S;
+  x0::S = fill!(S(undef, size(A, 2)), zero(eltype(b))),
+  lvar::S = fill!(S(undef, size(A, 2)), eltype(b)(-Inf)),
+  uvar::S = fill!(S(undef, size(A, 2)), eltype(b)(Inf)),
+  lcon::S = S(undef, 0),
+  ucon::S = S(undef, 0),
+  C::AbstractLinearOperator{T} = opZeros(T, length(lcon), size(A, 2)),
+  y0::S = fill!(S(undef, length(lcon)), zero(eltype(b))),
+  name::String = "generic-LLSModel",
+) where {T, S}
+  nvar = size(A, 2)
+  nequ = length(b)
+  ncon = length(lcon)
+
+  meta = NLPModelMeta(
+    nvar,
+    x0 = x0,
+    lvar = lvar,
+    uvar = uvar,
+    ncon = ncon,
+    y0 = y0,
+    lin = 1:ncon,
+    lcon = lcon,
+    ucon = ucon,
+    nnzh = 0,
+    name = name,
+  )
+
+  nls_meta = NLSMeta(nequ, nvar, x0 = x0, nnzh = 0, lin = 1:nequ)
+
+  return LLSModel(meta, nls_meta, NLSCounters(), A, b, C)
+end
+
 function NLPModels.residual!(nls::LLSModel, x::AbstractVector, Fx::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ Fx
@@ -152,10 +187,10 @@ function NLPModels.residual!(nls::LLSModel, x::AbstractVector, Fx::AbstractVecto
 end
 
 function NLPModels.jac_structure_residual!(
-  nls::LLSModel,
+  nls::LLSModel{T, S, M1, M2},
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
-)
+) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
   @lencheck nls.nls_meta.nnzj rows
   @lencheck nls.nls_meta.nnzj cols
   rows .= nls.A.rows
@@ -163,12 +198,18 @@ function NLPModels.jac_structure_residual!(
   return rows, cols
 end
 
-function NLPModels.jac_coord_residual!(nls::LLSModel, x::AbstractVector, vals::AbstractVector)
+function NLPModels.jac_coord_residual!(nls::LLSModel{T, S, M1, M2}, x::AbstractVector, vals::AbstractVector) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nnzj vals
   increment!(nls, :neval_jac_residual)
   vals .= nls.A.vals
   return vals
+end
+
+function NLPModels.jac_residual(nls::LLSModel{T, S, M1, M2}, x::AbstractVector) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
+  @lencheck nls.meta.nvar x
+  increment!(nls, :neval_jac_residual)
+  return nls.A
 end
 
 function NLPModels.jprod_residual!(
@@ -207,6 +248,14 @@ function NLPModels.hess_residual(nls::LLSModel, x::AbstractVector{T}, v::Abstrac
   return spzeros(T, n, n)
 end
 
+function NLPModels.hess_residual(nls::LLSModel{T, S, M1, M2}, x::AbstractVector{T}, v::AbstractVector) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
+  @lencheck nls.meta.nvar x
+  @lencheck nls.nls_meta.nequ v
+  increment!(nls, :neval_hess_residual)
+  n = nls.meta.nvar
+  return opZeros(T, n, n)
+end
+
 function NLPModels.hess_structure_residual!(
   nls::LLSModel,
   rows::AbstractVector{<:Integer},
@@ -237,6 +286,13 @@ function NLPModels.jth_hess_residual(nls::LLSModel, x::AbstractVector{T}, i::Int
   return spzeros(T, n, n)
 end
 
+function NLPModels.jth_hess_residual(nls::LLSModel{T, S, M1, M2}, x::AbstractVector{T}, i::Int) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
+  @lencheck nls.meta.nvar x
+  increment!(nls, :neval_jhess_residual)
+  n = nls.meta.nvar
+  return opZeros(T, n, n)
+end
+
 function NLPModels.hprod_residual!(
   nls::LLSModel,
   x::AbstractVector,
@@ -259,22 +315,28 @@ function NLPModels.cons!(nls::LLSModel, x::AbstractVector, c::AbstractVector)
 end
 
 function NLPModels.jac_structure!(
-  nls::LLSModel,
+  nls::LLSModel{T, S, M1, M2},
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
-)
+) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
   @lencheck nls.meta.nnzj rows cols
   rows .= nls.C.rows
   cols .= nls.C.cols
   return rows, cols
 end
 
-function NLPModels.jac_coord!(nls::LLSModel, x::AbstractVector, vals::AbstractVector)
+function NLPModels.jac_coord!(nls::LLSModel{T, S, M1, M2}, x::AbstractVector, vals::AbstractVector) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.nnzj vals
   increment!(nls, :neval_jac)
   vals .= nls.C.vals
   return vals
+end
+
+function NLPModels.jac(nls::LLSModel{T, S, M1, M2}, x::AbstractVector) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
+  @lencheck nls.meta.nvar x
+  increment!(nls, :neval_jac)
+  return nls.C
 end
 
 function NLPModels.jprod!(nls::LLSModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
