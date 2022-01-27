@@ -27,7 +27,7 @@ function LLSModel(
   uvar::S = fill!(S(undef, size(A, 2)), eltype(b)(Inf)),
   lcon::S = S(undef, 0),
   ucon::S = S(undef, 0),
-  C::AbstractMatrix = SparseMatrixCOO(length(lcon), length(lvar), Int[], Int[], similar(b, 0, 0)),
+  C::AbstractMatrix = SparseMatrixCOO(length(lcon), length(lvar), Int[], Int[], similar(b, 0)),
   y0::S = fill!(S(undef, size(C, 1)), zero(eltype(b))),
   name::String = "generic-LLSModel",
 ) where {S}
