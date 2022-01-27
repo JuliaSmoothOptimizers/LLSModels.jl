@@ -190,7 +190,7 @@ function NLPModels.jac_structure_residual!(
   nls::LLSModel{T, S, M1, M2},
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
-) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
+) where {T, S, M1 <: SparseMatrixCOO, M2 <: SparseMatrixCOO}
   @lencheck nls.nls_meta.nnzj rows
   @lencheck nls.nls_meta.nnzj cols
   rows .= nls.A.rows
@@ -202,7 +202,7 @@ function NLPModels.jac_coord_residual!(
   nls::LLSModel{T, S, M1, M2},
   x::AbstractVector,
   vals::AbstractVector,
-) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
+) where {T, S, M1 <: SparseMatrixCOO, M2 <: SparseMatrixCOO}
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nnzj vals
   increment!(nls, :neval_jac_residual)
@@ -333,7 +333,7 @@ function NLPModels.jac_structure!(
   nls::LLSModel{T, S, M1, M2},
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
-) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
+) where {T, S, M1 <: SparseMatrixCOO, M2 <: SparseMatrixCOO}
   @lencheck nls.meta.nnzj rows cols
   rows .= nls.C.rows
   cols .= nls.C.cols
@@ -344,7 +344,7 @@ function NLPModels.jac_coord!(
   nls::LLSModel{T, S, M1, M2},
   x::AbstractVector,
   vals::AbstractVector,
-) where {T, S, M1 <: AbstractMatrix, M2 <: AbstractMatrix}
+) where {T, S, M1 <: SparseMatrixCOO, M2 <: SparseMatrixCOO}
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.nnzj vals
   increment!(nls, :neval_jac)
