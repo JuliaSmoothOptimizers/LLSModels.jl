@@ -79,13 +79,13 @@ function lls_test()
       x = [1.0; -1.0; 1.0]
 
       @test isapprox(A * x - b, residual(nls, x), rtol = 1e-8)
-      @test A == jac_residual(nls, x)
+      @test_throws MethodError jac_residual(nls, x)
       @test Matrix(hess_residual(nls, x, ones(nequ))) == zeros(nvar, nvar)
       for i = 1:nequ
         @test isapprox(zeros(nvar, nvar), Matrix(jth_hess_residual(nls, x, i)), rtol = 1e-8)
       end
       @show nls
-      @test C == jac(nls, x)
+      @test_throws MethodError jac(nls, x)
 
       @test nls.meta.nlin == length(nls.meta.lin) == ncon
       @test nls.meta.nnln == length(nls.meta.nln) == 0
