@@ -5,9 +5,6 @@ list_krylov_solvers = Dict{Symbol,Symbol}()
 @init begin
   @require Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7" begin
     list_krylov_solvers = Krylov.KRYLOV_SOLVERS
-    for k in [:gpmr]
-      delete!(list_krylov_solvers, k)
-    end
 
     for (ofun, KS) in list_krylov_solvers
       ofun == :gpmr && continue
