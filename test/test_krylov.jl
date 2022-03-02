@@ -6,6 +6,7 @@ using Krylov
   n = 20
   A = spdiagm(-1 => ones(n-1), 0 => 4*ones(n), 1 => ones(n-1))
   b = A * ones(n)
+  c = b
   lls = LLSModel(A, b)
 
   (x, stats) = cgls(lls)
@@ -17,17 +18,26 @@ using Krylov
     if ofun in [:craig, :craigmr, :lnlq]
       (x, y, stats) = eval(ofun)(lls)
       @test stats.solved
+    elseif ofun in [:bilqr, :trilqr]
+      (x, y, stats) = eval(ofun)(lls, c)
+      @test stats.solved_primal && stats.solved_dual
+    elseif ofun in [:gpmr, :tricg, :trimr]
+      (x, y, stats) = eval(ofun)(lls, c)
+      @test stats.solved
+    elseif ofun in [:usymlq, :usymqr]
+      (x, stats) = eval(ofun)(lls, c)
+      @test stats.solved
     else
       (x, stats) = eval(ofun)(lls)
       @test stats.solved
     end
-    solver = if ofun in [:fom, :gmres]
-      eval(KS)(lls)
-    else
-      eval(KS)(lls)
-    end
+    solver = eval(KS)(lls)
     ifun = Symbol(ofun, "!")
-    eval(ifun)(solver, lls)
+    if ofun in [:bilqr, :gpmr, :tricg, :trilqr, :trimr, :usymlq, :usymqr]
+      eval(ifun)(solver, lls, c)
+    else
+      eval(ifun)(solver, lls)
+    end
     @test issolved(solver)
   end
 end
