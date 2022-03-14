@@ -14,6 +14,15 @@ using Krylov
   cgls!(solver, lls)
   @test stats.solved
 
+  shifts = collect(1.:10.)
+  nshifts = length(shifts)
+  lls = LLSModel(A, b)
+  (x, stats) = cg_lanczos(lls, shifts)
+  @test stats.solved
+  solver = CgLanczosShiftSolver(lls, nshifts)
+  cg_lanczos!(solver, lls, shifts)
+  @test stats.solved
+
   for (ofun, KS) in LLSModels.list_krylov_solvers
     if ofun in [:craig, :craigmr, :lnlq]
       (x, y, stats) = eval(ofun)(lls)
