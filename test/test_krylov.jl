@@ -4,7 +4,7 @@ using Krylov
 
 @testset "test solve LLSModel" begin
   n = 20
-  A = spdiagm(-1 => ones(n-1), 0 => 4*ones(n), 1 => ones(n-1))
+  A = spdiagm(-1 => ones(n - 1), 0 => 4 * ones(n), 1 => ones(n - 1))
   b = A * ones(n)
   c = b
   lls = LLSModel(A, b)
@@ -14,7 +14,7 @@ using Krylov
   cgls!(solver, lls)
   @test stats.solved
 
-  shifts = collect(1.:10.)
+  shifts = collect(1.0:10.0)
   nshifts = length(shifts)
   lls = LLSModel(A, b)
   (x, stats) = cg_lanczos(lls, shifts)
