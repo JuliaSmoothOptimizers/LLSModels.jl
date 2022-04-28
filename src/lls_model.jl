@@ -87,6 +87,8 @@ function LLSModel(
     lcon = lcon,
     ucon = ucon,
     nnzj = nnz(C),
+    lin_nnzj = nnz(C),
+    nln_nnzj = 0,
     nnzh = 0,
     name = name,
   )
@@ -170,6 +172,9 @@ function LLSModel(
     ucon = ucon,
     nnzh = 0,
     name = name,
+    nnzj = nvar * ncon,
+    lin_nnzj = nvar * ncon,
+    nln_nnzj = 0,
   )
 
   nls_meta = NLSMeta(nequ, nvar, x0 = x0, nnzh = 0, lin = 1:nequ)
@@ -321,35 +326,44 @@ function NLPModels.hprod_residual!(
   return Hiv
 end
 
-function NLPModels.cons!(nls::LLSModel, x::AbstractVector, c::AbstractVector)
+function NLPModels.cons_lin!(nls::LLSModel, x::AbstractVector, c::AbstractVector)
   @lencheck nls.meta.nvar x
-  @lencheck nls.meta.ncon c
-  increment!(nls, :neval_cons)
+  @lencheck nls.meta.nlin c
+  increment!(nls, :neval_cons_lin)
   mul!(c, nls.C, x)
   return c
 end
 
-function NLPModels.jac_structure!(
+function NLPModels.jac_lin_structure!(
   nls::LLSModel{T, S, M1, M2},
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 ) where {T, S, M1 <: SparseMatrixCOO, M2 <: SparseMatrixCOO}
-  @lencheck nls.meta.nnzj rows cols
+  @lencheck nls.meta.lin_nnzj rows cols
   rows .= nls.C.rows
   cols .= nls.C.cols
   return rows, cols
 end
 
-function NLPModels.jac_coord!(
+function NLPModels.jac_lin_coord!(
   nls::LLSModel{T, S, M1, M2},
   x::AbstractVector,
   vals::AbstractVector,
 ) where {T, S, M1 <: SparseMatrixCOO, M2 <: SparseMatrixCOO}
   @lencheck nls.meta.nvar x
-  @lencheck nls.meta.nnzj vals
-  increment!(nls, :neval_jac)
+  @lencheck nls.meta.lin_nnzj vals
+  increment!(nls, :neval_jac_lin)
   vals .= nls.C.vals
   return vals
+end
+
+function NLPModels.jac_lin(
+  nls::LLSModel{T, S, M1, M2},
+  x::AbstractVector,
+) where {T, S, M1 <: AbstractLinearOperator, M2 <: AbstractLinearOperator}
+  @lencheck nls.meta.nvar x
+  increment!(nls, :neval_jac_lin)
+  return nls.C
 end
 
 function NLPModels.jac(
@@ -361,18 +375,18 @@ function NLPModels.jac(
   return nls.C
 end
 
-function NLPModels.jprod!(nls::LLSModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
+function NLPModels.jprod_lin!(nls::LLSModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
   @lencheck nls.meta.nvar x v
-  @lencheck nls.meta.ncon Jv
-  increment!(nls, :neval_jprod)
+  @lencheck nls.meta.nlin Jv
+  increment!(nls, :neval_jprod_lin)
   mul!(Jv, nls.C, v)
   return Jv
 end
 
-function NLPModels.jtprod!(nls::LLSModel, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector)
+function NLPModels.jtprod_lin!(nls::LLSModel, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector)
   @lencheck nls.meta.nvar x Jtv
-  @lencheck nls.meta.ncon v
-  increment!(nls, :neval_jtprod)
+  @lencheck nls.meta.nlin v
+  increment!(nls, :neval_jtprod_lin)
   mul!(Jtv, transpose(nls.C), v)
   return Jtv
 end
