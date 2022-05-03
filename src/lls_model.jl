@@ -375,7 +375,12 @@ function NLPModels.jac(
   return nls.C
 end
 
-function NLPModels.jprod_lin!(nls::LLSModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
+function NLPModels.jprod_lin!(
+  nls::LLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  Jv::AbstractVector,
+)
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.nlin Jv
   increment!(nls, :neval_jprod_lin)
@@ -383,7 +388,12 @@ function NLPModels.jprod_lin!(nls::LLSModel, x::AbstractVector, v::AbstractVecto
   return Jv
 end
 
-function NLPModels.jtprod_lin!(nls::LLSModel, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector)
+function NLPModels.jtprod_lin!(
+  nls::LLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  Jtv::AbstractVector,
+)
   @lencheck nls.meta.nvar x Jtv
   @lencheck nls.meta.nlin v
   increment!(nls, :neval_jtprod_lin)
