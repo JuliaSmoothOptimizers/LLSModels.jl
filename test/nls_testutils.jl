@@ -18,7 +18,11 @@
   end
   @testset "Check dimensions" begin
     check_nls_dimensions(lls)
-    check_nlp_dimensions(lls, exclude = [hess, hess_coord, jth_hess, jth_hess_coord, jth_hprod], linear_api = true)
+    check_nlp_dimensions(
+      lls,
+      exclude = [hess, hess_coord, jth_hess, jth_hess_coord, jth_hprod],
+      linear_api = true,
+    )
   end
   @testset "Multiple precision support" begin
     multiple_precision_nls(lls_from_T, linear_api = true)
