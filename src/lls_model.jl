@@ -114,7 +114,7 @@ function LLSModel(
   ucon::S = S(undef, 0),
   y0::S = fill!(S(undef, length(lcon)), zero(eltype(b))),
   name::String = "generic-LLSModel",
-) where {T, S}
+) where {S}
   nequ = length(b)
   ncon = length(lcon)
   if !(ncon == length(ucon) == length(y0))
