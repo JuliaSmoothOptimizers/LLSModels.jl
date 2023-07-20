@@ -10,7 +10,7 @@ makedocs(
     prettyurls = get(ENV, "CI", nothing) == "true",
   ),
   sitename = "LLSModels.jl",
-  pages = ["Home" => "index.md"],
+  pages = ["Home" => "index.md", "Reference" => "reference.md"],
 )
 
 deploydocs(
