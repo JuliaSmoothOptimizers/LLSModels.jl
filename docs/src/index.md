@@ -12,11 +12,6 @@ pkg> add LLSModels
 ## Usage
 
 This package defines [`LLSModel`](@ref).
-
-```@docs
-LLSModel
-```
-
 We can define a linear least squares by passing the matrices that define the problem
 ```math
 \begin{aligned}
