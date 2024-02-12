@@ -4,7 +4,7 @@ This package provides a linear least squares model implementing the [NLPModels](
 
 ## How to Cite
 
-If you use LLSModels.jl in your work, please cite using the format given in [CITATION.bib](https://github.com/JuliaSmoothOptimizers/LLSModels.jl/blob/main/CITATION.bib).
+If you use LLSModels.jl in your work, please cite using the format given in [CITATION.cff](https://github.com/JuliaSmoothOptimizers/LLSModels.jl/blob/main/CITATION.cff).
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4625076.svg)](https://doi.org/10.5281/zenodo.4625076)
 [![GitHub release](https://img.shields.io/github/release/JuliaSmoothOptimizers/LLSModels.jl.svg)](https://github.com/JuliaSmoothOptimizers/LLSModels.jl/releases/latest)
