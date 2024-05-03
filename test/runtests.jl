@@ -1,5 +1,6 @@
 #stdlib
 using LinearAlgebra, SparseArrays, Test
+using CUDA
 #jso
 using LinearOperators, NLPModels, LLSModels, NLPModelsTest, NLPModelsModifiers
 
