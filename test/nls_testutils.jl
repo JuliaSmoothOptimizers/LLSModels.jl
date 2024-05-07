@@ -1,6 +1,7 @@
 @testset "Checking TestUtils tests on problem LLS" begin
-  lls_from_T(::Type{T} = Float64) where {T <: Number} = lls_from_T(Vector{Float64}, Matrix{Float64})
-  lls_from_T(::Type{S}, ::Type{Mat}) where {Mat, S} = LLSModel(
+  lls_from_T(::Type{T} = Float64) where {T <: Number} = lls_from_T(Vector{T}, Matrix{T})
+  lls_from_T(::Type{CuVector{T}}) where {T <: Number} = lls_from_T(CuVector{T}, CuMatrix{T})
+  lls_from_T(::Type{S}, ::Type{Mat}) where {S, Mat} = LLSModel(
     Mat([1 -1; 1 1; 0 1]),
     S([0; 2; 2]),
     x0 = fill!(S(undef, 2), 0),
@@ -31,7 +32,7 @@
   if CUDA.functional()
     @testset "GPU Multiple precision support" begin
       CUDA.allowscalar() do
-        multiple_precision_nls_array(lls_from_T, CuArray, linear_api = true)
+        multiple_precision_nls_array(lls_from_T, CuVector, linear_api = true)
       end
     end
   end
