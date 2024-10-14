@@ -24,7 +24,7 @@ using Krylov
     elseif ofun in [:usymlq, :usymqr]
       (x, stats) = eval(ofun)(lls, c)
       @test stats.solved
-    elseif ofun == :cg_lanczos_shift
+    elseif ofun in [:cg_lanczos_shift, :cgls_lanczos_shift]
       (x, stats) = eval(ofun)(lls, shifts)
       @test stats.solved
     else
@@ -41,7 +41,7 @@ using Krylov
     ifun = Symbol(ofun, "!")
     if ifun in [:bilqr!, :gpmr!, :tricg!, :trilqr!, :trimr!, :usymlq!, :usymqr!]
       eval(ifun)(solver, lls, c)
-    elseif ifun == :cg_lanczos_shift!
+    elseif ifun in [:cg_lanczos_shift!, :cgls_lanczos_shift!]
       eval(ifun)(solver, lls, shifts)
     else
       eval(ifun)(solver, lls)
