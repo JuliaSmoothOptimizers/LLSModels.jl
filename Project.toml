@@ -1,6 +1,6 @@
 name = "LLSModels"
 uuid = "39f5bc3e-5160-4bf8-ac48-504fd2534d24"
-version = "0.3.10"
+version = "0.3.11"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
