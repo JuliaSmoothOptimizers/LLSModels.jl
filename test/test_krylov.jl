@@ -32,7 +32,7 @@ using Krylov
       @test stats.solved
     end
 
-    if KS == :CgLanczosShiftSolver
+    if KS in [:CgLanczosShiftSolver, :CglsLanczosShiftSolver]
       solver = eval(KS)(lls, nshifts)
     else
       solver = eval(KS)(lls)
