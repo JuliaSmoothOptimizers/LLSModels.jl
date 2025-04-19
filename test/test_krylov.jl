@@ -7,7 +7,7 @@
   nshifts = length(shifts)
   lls = LLSModel(A, b)
 
-  for (ofun, KS) in LLSModels.list_krylov_solvers
+  for (ofun, KS) in Krylov.KRYLOV_SOLVERS
     if ofun in [:craig, :craigmr, :lnlq]
       (x, y, stats) = eval(ofun)(lls)
       @test stats.solved
