@@ -29,8 +29,7 @@ for (ofun, KS) in Krylov.KRYLOV_SOLVERS
 
     Wrapper to define the solver structure $(Krylov.$KS) used in the $(Krylov.$ifun) in-place method for linear least-squares from Krylov.jl.
     """
-    Krylov.$KS(lls::LLSModel, args...; kwargs...) =
-      Krylov.$KS(lls.A, lls.b, args...; kwargs...)
+    Krylov.$KS(lls::LLSModel, args...; kwargs...) = Krylov.$KS(lls.A, lls.b, args...; kwargs...)
   end
 end
 
@@ -59,6 +58,7 @@ end
 
 Wrapper to define the solver structure GpmrSolver used in the gpmr! in-place method for linear least-squares from Krylov.jl.
 """
-Krylov.GpmrSolver(lls::LLSModel, args...; kwargs...) = Krylov.GpmrSolver(lls.A, lls.b, args...; kwargs...)
+Krylov.GpmrSolver(lls::LLSModel, args...; kwargs...) =
+  Krylov.GpmrSolver(lls.A, lls.b, args...; kwargs...)
 
 end
