@@ -2,8 +2,43 @@ module LLSModelsKrylovExt
 
 using Krylov, LLSModels, NLPModels
 
-for (ofun, KS) in Krylov.KRYLOV_SOLVERS
-  ofun == :gpmr && continue
+for (KS, ofun) in [
+  (:LsmrWorkspace     , :lsmr      ),
+  (:CgsWorkspace      , :cgs       ),
+  (:UsymlqWorkspace   , :usymlq    ),
+  (:LnlqWorkspace     , :lnlq      ),
+  (:BicgstabWorkspace , :bicgstab  ),
+  (:CrlsWorkspace     , :crls      ),
+  (:LsqrWorkspace     , :lsqr      ),
+  (:MinresWorkspace   , :minres    ),
+  (:MinaresWorkspace  , :minares   ),
+  (:CgneWorkspace     , :cgne      ),
+  (:DqgmresWorkspace  , :dqgmres   ),
+  (:SymmlqWorkspace   , :symmlq    ),
+  (:TrimrWorkspace    , :trimr     ),
+  (:UsymqrWorkspace   , :usymqr    ),
+  (:BilqrWorkspace    , :bilqr     ),
+  (:CrWorkspace       , :cr        ),
+  (:CarWorkspace      , :car       ),
+  (:CraigmrWorkspace  , :craigmr   ),
+  (:TricgWorkspace    , :tricg     ),
+  (:CraigWorkspace    , :craig     ),
+  (:DiomWorkspace     , :diom      ),
+  (:LslqWorkspace     , :lslq      ),
+  (:TrilqrWorkspace   , :trilqr    ),
+  (:CrmrWorkspace     , :crmr      ),
+  (:CgWorkspace       , :cg        ),
+  (:CglsWorkspace     , :cgls      ),
+  (:CgLanczosWorkspace, :cg_lanczos),
+  (:BilqWorkspace     , :bilq      ),
+  (:MinresQlpWorkspace, :minres_qlp),
+  (:QmrWorkspace      , :qmr       ),
+  (:GmresWorkspace    , :gmres     ),
+  (:FgmresWorkspace   , :fgmres    ),
+  (:FomWorkspace      , :fom       ),
+  (:CgLanczosShiftWorkspace  , :cg_lanczos_shift  ),
+  (:CglsLanczosShiftWorkspace, :cgls_lanczos_shift),
+]
   ifun = Symbol(ofun, "!")
   @eval begin
     @doc """
@@ -44,21 +79,21 @@ function Krylov.gpmr(lls::LLSModel, args...; kwargs...)
 end
 
 """
-    gpmr!(::GpmrSolver, ::LLSModel, args...; kwargs...)
+    gpmr!(::GpmrWorkspace, ::LLSModel, args...; kwargs...)
 
 Wrapper using the gpmr! in-place method for linear least-squares from Krylov.jl with `B = Aᵀ`.
 """
-function Krylov.gpmr!(solver::Krylov.GpmrSolver, lls::LLSModel, args...; kwargs...)
+function Krylov.gpmr!(solver::Krylov.GpmrWorkspace, lls::LLSModel, args...; kwargs...)
   unconstrained(lls) || error("The LLSModels has constraints.")
   Krylov.gpmr!(solver, lls.A, lls.A', lls.b, args...; kwargs...)
 end
 
 """
-    GpmrSolver(::LLSModel)
+    GpmrWorkspace(::LLSModel)
 
-Wrapper to define the solver structure GpmrSolver used in the gpmr! in-place method for linear least-squares from Krylov.jl.
+Wrapper to define the solver structure GpmrWorkspace used in the gpmr! in-place method for linear least-squares from Krylov.jl.
 """
-Krylov.GpmrSolver(lls::LLSModel, args...; kwargs...) =
-  Krylov.GpmrSolver(lls.A, lls.b, args...; kwargs...)
+Krylov.GpmrWorkspace(lls::LLSModel, args...; kwargs...) =
+  Krylov.GpmrWorkspace(lls.A, lls.b, args...; kwargs...)
 
 end

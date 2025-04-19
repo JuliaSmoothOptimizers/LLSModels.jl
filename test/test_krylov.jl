@@ -7,7 +7,45 @@
   nshifts = length(shifts)
   lls = LLSModel(A, b)
 
-  for (ofun, KS) in Krylov.KRYLOV_SOLVERS
+
+for (KS, ofun) in [
+  (:LsmrWorkspace     , :lsmr      ),
+  (:CgsWorkspace      , :cgs       ),
+  (:UsymlqWorkspace   , :usymlq    ),
+  (:LnlqWorkspace     , :lnlq      ),
+  (:BicgstabWorkspace , :bicgstab  ),
+  (:CrlsWorkspace     , :crls      ),
+  (:LsqrWorkspace     , :lsqr      ),
+  (:MinresWorkspace   , :minres    ),
+  (:MinaresWorkspace  , :minares   ),
+  (:CgneWorkspace     , :cgne      ),
+  (:DqgmresWorkspace  , :dqgmres   ),
+  (:SymmlqWorkspace   , :symmlq    ),
+  (:TrimrWorkspace    , :trimr     ),
+  (:UsymqrWorkspace   , :usymqr    ),
+  (:BilqrWorkspace    , :bilqr     ),
+  (:CrWorkspace       , :cr        ),
+  (:CarWorkspace      , :car       ),
+  (:CraigmrWorkspace  , :craigmr   ),
+  (:TricgWorkspace    , :tricg     ),
+  (:CraigWorkspace    , :craig     ),
+  (:DiomWorkspace     , :diom      ),
+  (:LslqWorkspace     , :lslq      ),
+  (:TrilqrWorkspace   , :trilqr    ),
+  (:CrmrWorkspace     , :crmr      ),
+  (:CgWorkspace       , :cg        ),
+  (:CglsWorkspace     , :cgls      ),
+  (:CgLanczosWorkspace, :cg_lanczos),
+  (:BilqWorkspace     , :bilq      ),
+  (:MinresQlpWorkspace, :minres_qlp),
+  (:QmrWorkspace      , :qmr       ),
+  (:GmresWorkspace    , :gmres     ),
+  (:FgmresWorkspace   , :fgmres    ),
+  (:FomWorkspace      , :fom       ),
+  (:GpmrWorkspace     , :gpmr      ),
+  (:CgLanczosShiftWorkspace  , :cg_lanczos_shift  ),
+  (:CglsLanczosShiftWorkspace, :cgls_lanczos_shift),
+]
     if ofun in [:craig, :craigmr, :lnlq]
       (x, y, stats) = eval(ofun)(lls)
       @test stats.solved
