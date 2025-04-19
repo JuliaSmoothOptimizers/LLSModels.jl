@@ -1,6 +1,6 @@
 module LLSModelsKrylovExt
 
-using Krylov, LLSModels
+using Krylov, LLSModels, NLPModels
 
 for (ofun, KS) in Krylov.KRYLOV_SOLVERS
   ofun == :gpmr && continue
