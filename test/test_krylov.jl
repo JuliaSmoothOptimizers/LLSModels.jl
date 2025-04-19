@@ -1,7 +1,3 @@
-@test LLSModels.list_krylov_solvers == Dict()
-
-using Krylov
-
 @testset "test solve LLSModel" begin
   n = 20
   A = spdiagm(-1 => ones(n - 1), 0 => 4 * ones(n), 1 => ones(n - 1))
@@ -11,7 +7,7 @@ using Krylov
   nshifts = length(shifts)
   lls = LLSModel(A, b)
 
-  for (ofun, KS) in LLSModels.list_krylov_solvers
+  for (ofun, KS) in Krylov.KRYLOV_SOLVERS
     if ofun in [:craig, :craigmr, :lnlq]
       (x, y, stats) = eval(ofun)(lls)
       @test stats.solved
