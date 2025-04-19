@@ -1,7 +1,7 @@
 #stdlib
 using LinearAlgebra, SparseArrays, Test
 #jso
-using LinearOperators, NLPModels, LLSModels, NLPModelsTest, NLPModelsModifiers
+using LinearOperators, NLPModels, Krylov, LLSModels, NLPModelsTest, NLPModelsModifiers
 
 include("test_lls_model.jl")
 include("nls_testutils.jl")

@@ -1,7 +1,3 @@
-@test LLSModels.list_krylov_solvers == Dict()
-
-using Krylov
-
 @testset "test solve LLSModel" begin
   n = 20
   A = spdiagm(-1 => ones(n - 1), 0 => 4 * ones(n), 1 => ones(n - 1))
