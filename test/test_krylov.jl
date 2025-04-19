@@ -66,20 +66,20 @@ for (KS, ofun) in [
       @test stats.solved
     end
 
-    if KS in [:CgLanczosShiftSolver, :CglsLanczosShiftSolver]
-      solver = eval(KS)(lls, nshifts)
+    if KS in [:CgLanczosShiftWorkspace, :CglsLanczosShiftWorkspace]
+      workspace = eval(KS)(lls, nshifts)
     else
-      solver = eval(KS)(lls)
+      workspace = eval(KS)(lls)
     end
 
     ifun = Symbol(ofun, "!")
     if ifun in [:bilqr!, :gpmr!, :tricg!, :trilqr!, :trimr!, :usymlq!, :usymqr!]
-      eval(ifun)(solver, lls, c)
+      eval(ifun)(workspace, lls, c)
     elseif ifun in [:cg_lanczos_shift!, :cgls_lanczos_shift!]
-      eval(ifun)(solver, lls, shifts)
+      eval(ifun)(workspace, lls, shifts)
     else
-      eval(ifun)(solver, lls)
+      eval(ifun)(workspace, lls)
     end
-    @test issolved(solver)
+    @test Krylov.issolved(workspace)
   end
 end
