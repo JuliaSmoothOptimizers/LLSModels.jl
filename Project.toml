@@ -17,7 +17,7 @@ Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
 LLSModelsKrylovExt = ["Krylov", "NLPModels"]
 
 [compat]
-Krylov = "0.9.10"
+Krylov = "0.9.10, 0.10"
 LinearOperators = "2"
 NLPModels = "0.21"
 NLPModelsModifiers = "0.7"
