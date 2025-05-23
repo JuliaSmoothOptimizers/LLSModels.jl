@@ -7,7 +7,45 @@
   nshifts = length(shifts)
   lls = LLSModel(A, b)
 
-  for (ofun, KS) in Krylov.KRYLOV_SOLVERS
+
+for (KS, ofun) in [
+  (:LsmrWorkspace     , :lsmr      ),
+  (:CgsWorkspace      , :cgs       ),
+  (:UsymlqWorkspace   , :usymlq    ),
+  (:LnlqWorkspace     , :lnlq      ),
+  (:BicgstabWorkspace , :bicgstab  ),
+  (:CrlsWorkspace     , :crls      ),
+  (:LsqrWorkspace     , :lsqr      ),
+  (:MinresWorkspace   , :minres    ),
+  (:MinaresWorkspace  , :minares   ),
+  (:CgneWorkspace     , :cgne      ),
+  (:DqgmresWorkspace  , :dqgmres   ),
+  (:SymmlqWorkspace   , :symmlq    ),
+  (:TrimrWorkspace    , :trimr     ),
+  (:UsymqrWorkspace   , :usymqr    ),
+  (:BilqrWorkspace    , :bilqr     ),
+  (:CrWorkspace       , :cr        ),
+  (:CarWorkspace      , :car       ),
+  (:CraigmrWorkspace  , :craigmr   ),
+  (:TricgWorkspace    , :tricg     ),
+  (:CraigWorkspace    , :craig     ),
+  (:DiomWorkspace     , :diom      ),
+  (:LslqWorkspace     , :lslq      ),
+  (:TrilqrWorkspace   , :trilqr    ),
+  (:CrmrWorkspace     , :crmr      ),
+  (:CgWorkspace       , :cg        ),
+  (:CglsWorkspace     , :cgls      ),
+  (:CgLanczosWorkspace, :cg_lanczos),
+  (:BilqWorkspace     , :bilq      ),
+  (:MinresQlpWorkspace, :minres_qlp),
+  (:QmrWorkspace      , :qmr       ),
+  (:GmresWorkspace    , :gmres     ),
+  (:FgmresWorkspace   , :fgmres    ),
+  (:FomWorkspace      , :fom       ),
+  (:GpmrWorkspace     , :gpmr      ),
+  (:CgLanczosShiftWorkspace  , :cg_lanczos_shift  ),
+  (:CglsLanczosShiftWorkspace, :cgls_lanczos_shift),
+]
     if ofun in [:craig, :craigmr, :lnlq]
       (x, y, stats) = eval(ofun)(lls)
       @test stats.solved
@@ -28,20 +66,20 @@
       @test stats.solved
     end
 
-    if KS in [:CgLanczosShiftSolver, :CglsLanczosShiftSolver]
-      solver = eval(KS)(lls, nshifts)
+    if KS in [:CgLanczosShiftWorkspace, :CglsLanczosShiftWorkspace]
+      workspace = eval(KS)(lls, nshifts)
     else
-      solver = eval(KS)(lls)
+      workspace = eval(KS)(lls)
     end
 
     ifun = Symbol(ofun, "!")
     if ifun in [:bilqr!, :gpmr!, :tricg!, :trilqr!, :trimr!, :usymlq!, :usymqr!]
-      eval(ifun)(solver, lls, c)
+      eval(ifun)(workspace, lls, c)
     elseif ifun in [:cg_lanczos_shift!, :cgls_lanczos_shift!]
-      eval(ifun)(solver, lls, shifts)
+      eval(ifun)(workspace, lls, shifts)
     else
-      eval(ifun)(solver, lls)
+      eval(ifun)(workspace, lls)
     end
-    @test issolved(solver)
+    @test Krylov.issolved(workspace)
   end
 end
