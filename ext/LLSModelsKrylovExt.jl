@@ -1,6 +1,6 @@
 module LLSModelsKrylovExt
 
-using Krylov, LLSModels, NLPModels
+using Krylov, LLSModels
 
 for (KS, ofun) in [
   (:LsmrWorkspace     , :lsmr      ),
@@ -47,7 +47,7 @@ for (KS, ofun) in [
     Wrapper using the $(Krylov.$ofun) method for linear least-squares from Krylov.jl.
     """
     function Krylov.$(ofun)(lls::LLSModel, args...; kwargs...)
-      unconstrained(lls) || error("The LLSModels has constraints.")
+      lls.meta.ncon == 0 && !(length(lls.meta.ifree) < lls.meta.nvar) || error("The LLSModels has constraints.")
       Krylov.$(ofun)(lls.A, lls.b, args...; kwargs...)
     end
     @doc """
@@ -56,7 +56,7 @@ for (KS, ofun) in [
     Wrapper using the $(Krylov.$ifun) in-place method for linear least-squares from Krylov.jl.
     """
     function Krylov.$(ifun)(solver::Krylov.$KS, lls::LLSModel, args...; kwargs...)
-      unconstrained(lls) || error("The LLSModels has constraints.")
+      lls.meta.ncon == 0 && !(length(lls.meta.ifree) < lls.meta.nvar) || error("The LLSModels has constraints.")
       Krylov.$(ifun)(solver, lls.A, lls.b, args...; kwargs...)
     end
     @doc """
@@ -74,7 +74,7 @@ end
 Wrapper using the gpmr method for linear least-squares from Krylov.jl with `B = Aᵀ`.
 """
 function Krylov.gpmr(lls::LLSModel, args...; kwargs...)
-  unconstrained(lls) || error("The LLSModels has constraints.")
+  lls.meta.ncon == 0 && !(length(lls.meta.ifree) < lls.meta.nvar) || error("The LLSModels has constraints.")
   Krylov.gpmr(lls.A, lls.A', lls.b, args...; kwargs...)
 end
 
@@ -84,7 +84,7 @@ end
 Wrapper using the gpmr! in-place method for linear least-squares from Krylov.jl with `B = Aᵀ`.
 """
 function Krylov.gpmr!(solver::Krylov.GpmrWorkspace, lls::LLSModel, args...; kwargs...)
-  unconstrained(lls) || error("The LLSModels has constraints.")
+  lls.meta.ncon == 0 && !(length(lls.meta.ifree) < lls.meta.nvar) || error("The LLSModels has constraints.")
   Krylov.gpmr!(solver, lls.A, lls.A', lls.b, args...; kwargs...)
 end
 
