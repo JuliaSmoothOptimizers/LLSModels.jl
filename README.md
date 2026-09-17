@@ -13,7 +13,6 @@ If you use LLSModels.jl in your work, please cite using the format given in [CIT
 [![codecov](https://codecov.io/gh/JuliaSmoothOptimizers/LLSModels.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaSmoothOptimizers/LLSModels.jl)
 
 ![CI](https://github.com/JuliaSmoothOptimizers/LLSModels.jl/workflows/CI/badge.svg?branch=main)
-[![Cirrus CI - Base Branch Build Status](https://img.shields.io/cirrus/github/JuliaSmoothOptimizers/LLSModels.jl?logo=Cirrus%20CI)](https://cirrus-ci.com/github/JuliaSmoothOptimizers/LLSModels.jl)
 
 ## Installation
 
